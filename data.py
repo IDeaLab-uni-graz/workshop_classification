@@ -44,5 +44,9 @@ class ImageLabelDataset(Dataset):
                 os.path.splitext(filename)[0] + ".txt"
             )
             label = np.genfromtxt(label_path, delimiter=' ')
+
+            if self.label_transform:
+                label = self.label_transform(label)
+
             labels.append(label)
         return np.array(labels)
