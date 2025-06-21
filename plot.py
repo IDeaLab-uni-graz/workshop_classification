@@ -61,3 +61,40 @@ def visualize_predictions(x_test, y_test, y_pred, vmin=-1, vmax=1, rows=3, cols=
 
     plt.tight_layout()
     plt.show()
+
+def plot_loss(ob_val, acc):
+    def moving_average(x, window=50):
+        return np.convolve(x, np.ones(window)/window, mode='valid')
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4), sharex=True)
+
+    # --- Plot Loss ---
+    ax1.plot(ob_val, linewidth=1, alpha=0.5, color='blue')
+    smoothed_loss = moving_average(ob_val)
+    ax1.plot(range(len(smoothed_loss)), smoothed_loss, linewidth=2, color='darkblue')
+    ax1.set_ylabel('Loss')
+    ax1.set_title('Loss over Training Steps')
+    ax1.set_ylim([0, 1.0])
+    ax1.set_xlim([0, len(ob_val)]) 
+
+    # --- Plot Accuracy ---
+    ax2.plot(acc, linewidth=1, alpha=0.5, color='red', label='Raw Accuracy')
+    smoothed_acc = moving_average(acc)
+    ax2.plot(range(len(smoothed_acc)), smoothed_acc, linewidth=2, color='darkred')
+    ax2.set_title('Accuracy over Training Steps')
+    
+    # Add horizontal milestone lines
+    milestones=[0.5, 0.75]
+    for milestone in milestones:
+        ax2.axhline(y=milestone, color='gray', linestyle='--', linewidth=1)
+        ax2.text(len(acc)*0.01, milestone + 0.01, f"{milestone:.1%}", color='gray', fontsize=8)
+
+    ax2.set_xlabel('Step')
+    ax2.set_ylabel('Accuracy')
+    ax2.set_ylim([0.25, 1.0])
+    ax2.set_xlim([0, len(acc)]) 
+
+    plt.tight_layout()
+    #plt.pause(0.001)
+
+
+
