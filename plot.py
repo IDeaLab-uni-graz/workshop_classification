@@ -96,5 +96,93 @@ def plot_loss(ob_val, acc):
     plt.tight_layout()
     #plt.pause(0.001)
 
+def compare_to_target_function(function_to_learn):
+    fig, ax = plt.subplots(figsize=(8, 6))
+    xmin, xmax = -3, 3
+    ymin, ymax = -8, 8
+    x = np.linspace(xmin, xmax, 100)
+    target_function = lambda x: 2*x + 1
+    ax.plot(x, target_function(x), label='Unknown Target function $f$', color='blue', zorder=10, linewidth=2)
+    ax.plot(x, function_to_learn(x), label='Our function to learn', color='red', zorder=11, linewidth=3)
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_xlim(xmin, xmax)
+    ax.set_xticks(np.arange(xmin, xmax+1, 1))
+    ax.set_yticks(np.arange(ymin, ymax+1, 1))
+    ax.grid()
+    ax.legend()
+    plt.axhline(y=0, color='black', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax.set_title('Comparison of target function $f$ and our function')
+    plt.show()
+
+def compare_to_target_data(function_to_learn):
+    fig, ax = plt.subplots(figsize=(8, 6))
+    xmin, xmax = -3, 3
+    ymin, ymax = -8, 8
+    x = np.linspace(xmin, xmax, 100)
+    target_function = lambda x: -2*x -1
+    target_x = np.array([-2, 0, 2])
+    noise = np.array([1.3, -0.6, 1.0])
+    target_y = target_function(target_x) + noise
+    my_y = function_to_learn(target_x)
+    ax.scatter(target_x, target_y, label='Data from our Unknown Target function $f$', color='blue', zorder=10, linewidth=2)
+    ax.plot(x, function_to_learn(x), label='Our function to learn', color='red', zorder=11, linewidth=3)
+    ax.scatter(target_x, my_y, color='red', zorder=11,linewidth=3)
+
+    def add_arrow(ax, x1, y1, x2, y2, i):
+        # Draw arrow from (x1, y1) to (x2, y2)
+        ax.annotate(
+            '',  # No text
+            xy=(x2, y2),  # End of arrow
+            xytext=(x1, y1),  # Start of arrow
+            arrowprops=dict(
+                arrowstyle='<->',
+                color='black',
+                linewidth=2,
+            )
+        )
+
+        mid_y = (y1 + y2) / 2
+        err = np.abs(y2 - y1)
+        ax.text(x1 + 0.1, mid_y, f'$Δ_{i} = {err:.2f}$', va='center', ha='left', fontsize=12)
+    sum = np.sum(np.abs(my_y - target_y))
+    ax.text(xmin + 0.2, ymin + 1.0, f'$\Delta_1 + \Delta_2 + \Delta_3 = {sum}$', va='center', ha='left', bbox=dict(boxstyle="round,pad=0.5", fc="white", alpha=0.5), fontsize=18)
+
+    add_arrow(ax, target_x[0], target_y[0], target_x[0], my_y[0], 1)
+    add_arrow(ax, target_x[1], target_y[1], target_x[1], my_y[1], 2)
+    add_arrow(ax, target_x[2], target_y[2], target_x[2], my_y[2], 3)
+
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_xlim(xmin, xmax)
+    ax.set_xticks(np.arange(xmin, xmax+1, 1))
+    ax.set_yticks(np.arange(ymin, ymax+1, 1))
+    ax.grid()
+    ax.legend()
+    plt.axhline(y=0, color='black', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax.set_title('Comparison of target function $f$ and our function')
+    plt.show()
 
 
+def plot_2d_function(func, x_range, y_range, filename=""):
+    x = np.linspace(x_range[0], x_range[1], 400)
+    y = np.linspace(y_range[0], y_range[1], 400)
+    X, Y = np.meshgrid(x, y)
+    Z = func(X, Y)
+
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    surface = ax.plot_surface(X, Y, Z, color=plt.rcParams['axes.prop_cycle'].by_key()['color'][0],
+                              alpha=1)  # Use default matplotlib blue with transparency
+
+    ax.set_xlabel("x", fontsize=14)
+    ax.set_ylabel("y", fontsize=14)
+    # ax.set_zlabel("z", fontsize=14)
+    # ax.set_title("Surface Plot of the Function", fontsize=16)
+    ax.invert_xaxis()  # Flip the x-axis
+
+    if filename:
+        plt.savefig(filename)
+    plt.show()
