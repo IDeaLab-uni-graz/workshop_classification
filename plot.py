@@ -96,39 +96,24 @@ def plot_loss(ob_val, acc):
     plt.tight_layout()
     #plt.pause(0.001)
 
-def compare_to_target_function(function_to_learn):
-    fig, ax = plt.subplots(figsize=(8, 6))
+def compare_to_target(function_to_learn, type):
     xmin, xmax = -3, 3
     ymin, ymax = -8, 8
-    x = np.linspace(xmin, xmax, 100)
-    target_function = lambda x: 2*x + 1
-    ax.plot(x, target_function(x), label='Unknown Target function $f$', color='blue', zorder=10, linewidth=2)
-    ax.plot(x, function_to_learn(x), label='Our function to learn', color='red', zorder=11, linewidth=3)
-    ax.set_xlabel('$x$')
-    ax.set_ylabel('$y$')
-    ax.set_xlim(xmin, xmax)
-    ax.set_xticks(np.arange(xmin, xmax+1, 1))
-    ax.set_yticks(np.arange(ymin, ymax+1, 1))
-    ax.grid()
-    ax.legend()
-    plt.axhline(y=0, color='black', linestyle='-', linewidth=1)
-    plt.axvline(x=0, color='black', linestyle='-', linewidth=1)
-    ax.set_title('Comparison of target function $f$ and our function')
-    plt.show()
 
-def compare_to_target_data(function_to_learn):
-    fig, ax = plt.subplots(figsize=(8, 6))
-    xmin, xmax = -3, 3
-    ymin, ymax = -8, 8
     x = np.linspace(xmin, xmax, 100)
-    target_function = lambda x: -2*x -1
-    target_x = np.array([-2, 0, 2])
-    noise = np.array([1.3, -0.6, 1.0])
-    target_y = target_function(target_x) + noise
-    my_y = function_to_learn(target_x)
-    ax.scatter(target_x, target_y, label='Data from our Unknown Target function $f$', color='blue', zorder=10, linewidth=2)
-    ax.plot(x, function_to_learn(x), label='Our function to learn', color='red', zorder=11, linewidth=3)
-    ax.scatter(target_x, my_y, color='red', zorder=11,linewidth=3)
+
+    if type == 'function':
+        target_function = lambda x: 2*x + 1
+        target_x = x
+        target_y = target_function(target_x)
+    elif type == 'data':
+        target_function = lambda x: -2*x - 1
+        target_x = np.array([-2, 0, 2])
+        noise = np.array([1.3, -0.6, 1.0])
+        target_y = target_function(target_x) + noise
+
+    # Plot code
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     def add_arrow(ax, x1, y1, x2, y2, i):
         # Draw arrow from (x1, y1) to (x2, y2)
@@ -146,25 +131,99 @@ def compare_to_target_data(function_to_learn):
         mid_y = (y1 + y2) / 2
         err = np.abs(y2 - y1)
         ax.text(x1 + 0.1, mid_y, f'$Δ_{i} = {err:.2f}$', va='center', ha='left', fontsize=12)
-    sum = np.sum(np.abs(my_y - target_y)**2)
-    ax.text(xmin + 0.2, ymin + 1.0, f'$\Delta_1^2 + \Delta_2^2 + \Delta_3^2 = {sum}$', va='center', ha='left', bbox=dict(boxstyle="round,pad=0.5", fc="white", alpha=0.5), fontsize=18)
 
-    add_arrow(ax, target_x[0], target_y[0], target_x[0], my_y[0], 1)
-    add_arrow(ax, target_x[1], target_y[1], target_x[1], my_y[1], 2)
-    add_arrow(ax, target_x[2], target_y[2], target_x[2], my_y[2], 3)
+    ax.plot(x, function_to_learn(x), label='Our function to learn', color='red', zorder=11, linewidth=3)
+
+    if type == 'function':
+        ax.plot(x, target_function(x), label='Unknown target function $f$', color='blue', zorder=10, linewidth=2)
+
+    elif type == 'data':
+        my_y = function_to_learn(target_x)
+        ax.scatter(target_x, target_y, label='Data from our unknown target function $f$', color='blue', zorder=10, linewidth=2)
+        ax.scatter(target_x, my_y, color='red', zorder=11, linewidth=3)
+
+        sum = np.sum((my_y - target_y) ** 2)
+        ax.text(xmin + 0.2, ymin + 1.0, f'$\\Delta_1^2 + \\Delta_2^2 + \\Delta_3^2 = {sum:.2f}$', va='center', ha='left',
+                bbox=dict(boxstyle="round,pad=0.5", fc="white", alpha=0.5), fontsize=18)
+
+        add_arrow(ax, target_x[0], target_y[0], target_x[0], my_y[0], 1)
+        add_arrow(ax, target_x[1], target_y[1], target_x[1], my_y[1], 2)
+        add_arrow(ax, target_x[2], target_y[2], target_x[2], my_y[2], 3)
 
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     ax.set_xlim(xmin, xmax)
-    ax.set_xticks(np.arange(xmin, xmax+1, 1))
-    ax.set_yticks(np.arange(ymin, ymax+1, 1))
+    ax.set_xticks(np.arange(xmin, xmax + 1, 1))
+    ax.set_yticks(np.arange(ymin, ymax + 1, 1))
     ax.grid()
     ax.legend()
     plt.axhline(y=0, color='black', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='black', linestyle='-', linewidth=1)
-    ax.set_title('Comparison of target function $f$ and our function')
+    ax.set_title(f'Comparison of our function to learn with the target {type}')
     plt.show()
 
+
+def plot_loss_landscape(func, sequence, x_range, y_range):
+    xmin, xmax = x_range
+    ymin, ymax = y_range
+
+    x = np.linspace(xmin, xmax, 400)
+    y = np.linspace(ymin, ymax, 400)
+
+    X, Y = np.meshgrid(x, y)
+    Z = func(X, Y)
+
+    opt_a, opt_b = -2.075, -0.43333333
+    f_opt = func(opt_a, opt_b)
+
+    # Plot code
+
+    fig = plt.figure(figsize=(10, 12))
+    ax = fig.add_subplot(111, projection='3d')
+
+    def plot_line_on_surface(ax, p0, p1, func, n=20):
+        x0, y0 = p0
+        x1, y1 = p1
+
+        if not isinstance(p0, np.ndarray):
+            p0 = np.array([p0])
+        if not isinstance(p1, np.ndarray):
+            p1 = np.array([p1])
+
+        x = p0 + (p1 - p0) * np.linspace(0, 1, n).reshape(-1, 1)
+        z = func(x[:, 0], x[:, 1])
+
+        ax.plot(x[:, 0], x[:, 1], z, color='red', alpha=1.0, zorder=5)
+        ax.plot([x0], [y0], [func(x0, y0)], color='red', alpha=1.0, zorder=5, marker='o', markersize=6)
+        ax.plot([x1], [y1], [func(x1, y1)], color='red', alpha=1.0, zorder=5, marker='o', markersize=6)
+
+    surface = ax.plot_surface(X, Y, Z, color=plt.rcParams['axes.prop_cycle'].by_key()['color'][0],
+                              alpha=1.0)  # Use default matplotlib blue with transparency
+
+    for p0, p1 in zip(sequence[:-1], sequence[1:]):
+        plot_line_on_surface(ax, p0, p1, func)
+
+    ax.plot([opt_a], [opt_b], [f_opt], color='orange', alpha=1.0, marker='*', markersize=10, zorder=5)
+    ax.plot([opt_a, opt_a], [opt_b, opt_b], [0.0, f_opt], color='orange', alpha=1.0)
+    ax.plot([opt_a, x_range[1] + 0.01], [opt_b, opt_b], [0.0, 0.0], color='orange', alpha=1.0)
+    ax.plot([opt_a, opt_a], [opt_b, y_range[1] + 0.03], [0.0, 0.0], color='orange', alpha=1.0)
+
+    Z = func(opt_a, opt_b) * np.ones_like(Z)
+    surface = ax.plot_surface(X, Y, Z, color=plt.rcParams['axes.prop_cycle'].by_key()['color'][1], alpha=0.2)
+
+    ax.set_xlabel("a", fontsize=14)
+    ax.set_ylabel("b", fontsize=14)
+    ax.view_init(elev=20, azim=75, roll=0)
+
+    ax.set_xlim(x_range)
+    ax.set_ylim(y_range)
+    ax.set_zlim(0.0, 4.0)
+
+    ax.text(opt_a + 0.1, opt_b, f_opt + 0.3, "global minimum", fontsize=12, color='orange', zorder=100)
+
+    ax.set_zlabel("$\\text{loss}(a,b)$", fontsize=14)
+    plt.title("3D plot of our loss in dependence of the two parameters $a,b$", fontsize=14)
+    plt.show()
 
 def plot_2d_function(func, x_range, y_range, filename=""):
     x = np.linspace(x_range[0], x_range[1], 400)
