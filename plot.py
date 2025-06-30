@@ -96,6 +96,10 @@ def plot_loss(ob_val, acc):
     plt.tight_layout()
     #plt.pause(0.001)
 
+#########################################################
+# Functions primarily used in basics.ipynb
+#########################################################
+
 def compare_to_target(function_to_learn, type):
     xmin, xmax = -3, 3
     ymin, ymax = -8, 8
@@ -225,7 +229,162 @@ def plot_loss_landscape(func, sequence, x_range, y_range):
     plt.title("3D plot of our loss in dependence of the two parameters $a,b$", fontsize=14)
     plt.show()
 
-def plot_2d_function(func, x_range, y_range, filename=""):
+def plot_loss_point(func, x0, xrange=(-3.0, -0.5), plot_loss=True):
+    xmin, xmax = xrange
+    x = np.linspace(xmin, xmax, 400)
+    
+    y = func(x)
+
+    # Differentiate func symbolically to create tangent line
+    from sympy import symbols, diff, lambdify
+    
+    xs = symbols('xs')
+    f = func(xs)
+    df = diff(f, xs)
+    df = lambdify(xs, df, modules=['numpy'])
+    tangent = lambda x: df(x0) * (x - x0) + func(x0)
+
+    y0 = func(x0)
+    slope = df(x0)
+
+    fig, ax = plt.subplots(figsize=(10,6))
+
+    if plot_loss:
+
+        ax.plot(x, y, label='loss')
+        
+        ax.axhline(
+            y=func(-2.075),
+            color='orange',
+            linestyle='--',
+            linewidth=1,
+            label='Optimal loss value'
+        )
+
+    # Draw tangent line
+    ax.scatter([x0], [y0], color='red', alpha=1.0, marker='o', s=40, zorder=20)
+    
+    ax.plot([xmin, xmax], [tangent(xmin), tangent(xmax)], 'red', linestyle='--', linewidth=1.0, label='Tangent line')
+    ax.text(x0 + 0.03, y0 - .3, r'$a_0$', va='center')
+    
+    # Labels and title
+    ax.set_xlabel('a')
+    ax.set_ylabel('loss(a)')
+    ax.set_ylim(0.0, 15.0)
+    ax.set_xlim(xrange)
+    ax.legend()
+    ax.grid()
+    ax.set_title(f'Step 1: start at $a_0={x0}$')
+    
+    plt.show()
+
+def plot_tangents(func, x0, step, xrange=(-3.0, -0.5), no_steps = 10, plot_loss=True):
+
+    if step > 0.1:
+            print("Warning: step size too large to plot!")
+            step = 0.1
+    
+    xmin, xmax = xrange
+    x = np.linspace(xmin, xmax, 400)
+
+    x_opt = -2.075
+    
+    y = func(x)
+
+    from sympy import symbols, diff, lambdify
+
+    xs = symbols('xs')
+    f = func(xs)
+    df = diff(f, xs)
+    df = lambdify(xs, df, modules=['numpy'])
+    
+    fig, ax = plt.subplots(figsize=(10,6))
+    
+    if plot_loss:
+
+        ax.plot(x, y, label='loss')
+        
+        ax.axhline(
+            y=func(x_opt),
+            color='orange',
+            linestyle='--',
+            linewidth=1,
+            label='Optimal loss value'
+        )
+
+    def add_tangent_decision(ax, x0, tangent, xmin, xmax, direction, step = 1.0, no = 0):
+        
+        y0 = tangent(x0)
+        ax.scatter([x0], [y0], color='red', alpha=1.0, marker='o', s=40, zorder=20)
+        ax.plot([xmin, xmax], [tangent(xmin), tangent(xmax)], 'red', linestyle='--', linewidth=1.0)
+        ax.text(x0-0.07, y0+0.5, f'$a_{no}$', va='center')
+
+        right = dict(
+            arrowstyle='<-', 
+            color=('black' if direction == 1 else 'lightgrey'), linewidth=2.0)
+        left = dict(
+            arrowstyle='->', 
+            color=('lightgrey' if direction == 1 else 'black'), linewidth=2.0)
+
+        if direction != 0:
+            ax.annotate(
+                '', 
+                xy=(x0-step, y0), 
+                xytext=(x0, y0),
+                arrowprops=left
+            )
+            ax.annotate(
+                '', 
+                xy=(x0, y0), 
+                xytext=(x0+step, y0),
+                arrowprops=right
+            )
+
+    x_i = x0
+    for i in range(no_steps):
+        error = np.abs(x_i - x_opt)
+        if error < 1e-3:
+            print(f'You are already close enough to the optimal value with step {i}!')
+            break
+
+        d = df(x_i)
+        d_i = -np.sign(d)
+        tangent = lambda x: d * (x - x_i) + func(x_i)
+        
+        add_tangent_decision(ax, x_i, tangent, xmin, xmax, d_i, step=step * d, no=i)
+        x_i -=step * d
+
+    add_tangent_decision(ax, x_i, tangent, xmin, xmax, 0, step=step * d, no=i)
+    
+    # Labels and title
+    ax.set_xlabel('a')
+    ax.set_ylabel('loss(a)')
+    ax.set_ylim(0.0, 15.0)
+    ax.set_xlim(xrange)
+    ax.grid()
+    ax.set_title('Step 2: finding our way to the optimal value')
+    
+    plt.show()
+
+def plot_activations(x_range, functions, labels, colors, linewidths, title="Function Comparison"):
+    x = np.linspace(x_range[0], x_range[1], 500)
+    plt.figure(figsize=(8, 6))
+
+    for func, label, color, linewidth in zip(functions, labels, colors, linewidths):
+        y = func(x)
+        plt.plot(x, y, label=label, linewidth=linewidth, color=color)
+
+    plt.title(title)
+    plt.ylim(0, 2)
+    plt.xlim(x_range)
+    plt.xlabel('$x$')
+    plt.ylabel('$y=f(x)$')
+    plt.grid(True)
+    plt.legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+def plot_2d_function(func, x_range, y_range):
     x = np.linspace(x_range[0], x_range[1], 400)
     y = np.linspace(y_range[0], y_range[1], 400)
     X, Y = np.meshgrid(x, y)
@@ -233,15 +392,11 @@ def plot_2d_function(func, x_range, y_range, filename=""):
 
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
-    surface = ax.plot_surface(X, Y, Z, color=plt.rcParams['axes.prop_cycle'].by_key()['color'][0],
-                              alpha=1)  # Use default matplotlib blue with transparency
+    surface = ax.plot_surface(X, Y, Z, color=plt.rcParams['axes.prop_cycle'].by_key()['color'][0], alpha=1)  # Use default matplotlib blue with transparency
 
     ax.set_xlabel("x", fontsize=14)
     ax.set_ylabel("y", fontsize=14)
-    # ax.set_zlabel("z", fontsize=14)
-    # ax.set_title("Surface Plot of the Function", fontsize=16)
+    #ax.set_zlabel("z", fontsize=14)
+    #ax.set_title("Surface Plot of the Function", fontsize=16)
     ax.invert_xaxis()  # Flip the x-axis
-
-    if filename:
-        plt.savefig(filename)
     plt.show()
