@@ -146,8 +146,8 @@ def compare_to_target_data(function_to_learn):
         mid_y = (y1 + y2) / 2
         err = np.abs(y2 - y1)
         ax.text(x1 + 0.1, mid_y, f'$Δ_{i} = {err:.2f}$', va='center', ha='left', fontsize=12)
-    sum = np.sum(np.abs(my_y - target_y))
-    ax.text(xmin + 0.2, ymin + 1.0, f'$\Delta_1 + \Delta_2 + \Delta_3 = {sum}$', va='center', ha='left', bbox=dict(boxstyle="round,pad=0.5", fc="white", alpha=0.5), fontsize=18)
+    sum = np.sum(np.abs(my_y - target_y)**2)
+    ax.text(xmin + 0.2, ymin + 1.0, f'$\Delta_1^2 + \Delta_2^2 + \Delta_3^2 = {sum}$', va='center', ha='left', bbox=dict(boxstyle="round,pad=0.5", fc="white", alpha=0.5), fontsize=18)
 
     add_arrow(ax, target_x[0], target_y[0], target_x[0], my_y[0], 1)
     add_arrow(ax, target_x[1], target_y[1], target_x[1], my_y[1], 2)
